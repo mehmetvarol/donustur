@@ -1,4 +1,4 @@
-//! Çalışma zamanı ayarları. Hepsi `DONUSTUR_*` ortam değişkenlerinden okunur.
+//! Çalışma zamanı ayarları. Hepsi `MORPHBOX_*` ortam değişkenlerinden okunur.
 
 use std::path::PathBuf;
 
@@ -30,23 +30,23 @@ impl Config {
             .map(|n| n.get())
             .unwrap_or(2);
         let default_workers = (cpus / 2).max(1);
-        let hwaccel = std::env::var("DONUSTUR_HWACCEL")
+        let hwaccel = std::env::var("MORPHBOX_HWACCEL")
             .map(|v| matches!(v.trim(), "auto" | "1" | "true" | "on"))
             .unwrap_or(false);
         Self {
-            host: env_or("DONUSTUR_HOST", "0.0.0.0".to_string()),
-            port: env_or("DONUSTUR_PORT", 8080),
-            data_dir: PathBuf::from(env_or("DONUSTUR_DATA_DIR", "./data".to_string())),
-            workers: env_or("DONUSTUR_WORKERS", default_workers).max(1),
-            ttl_min: env_or("DONUSTUR_TTL_MIN", 60),
-            max_upload_bytes: env_or::<u64>("DONUSTUR_MAX_UPLOAD_MB", 2048) * 1024 * 1024,
-            job_timeout_min: env_or("DONUSTUR_JOB_TIMEOUT_MIN", 30),
-            password: std::env::var("DONUSTUR_PASSWORD")
+            host: env_or("MORPHBOX_HOST", "0.0.0.0".to_string()),
+            port: env_or("MORPHBOX_PORT", 8080),
+            data_dir: PathBuf::from(env_or("MORPHBOX_DATA_DIR", "./data".to_string())),
+            workers: env_or("MORPHBOX_WORKERS", default_workers).max(1),
+            ttl_min: env_or("MORPHBOX_TTL_MIN", 60),
+            max_upload_bytes: env_or::<u64>("MORPHBOX_MAX_UPLOAD_MB", 2048) * 1024 * 1024,
+            job_timeout_min: env_or("MORPHBOX_JOB_TIMEOUT_MIN", 30),
+            password: std::env::var("MORPHBOX_PASSWORD")
                 .ok()
                 .filter(|p| !p.trim().is_empty()),
             hwaccel,
-            ffmpeg: env_or("DONUSTUR_FFMPEG", "ffmpeg".to_string()),
-            ffprobe: env_or("DONUSTUR_FFPROBE", "ffprobe".to_string()),
+            ffmpeg: env_or("MORPHBOX_FFMPEG", "ffmpeg".to_string()),
+            ffprobe: env_or("MORPHBOX_FFPROBE", "ffprobe".to_string()),
         }
     }
 

@@ -17,27 +17,27 @@ WORKDIR /src
 RUN apt-get update && apt-get install -y --no-install-recommends libheif-dev clang pkg-config nasm && rm -rf /var/lib/apt/lists/*
 COPY Cargo.toml Cargo.lock ./
 # bağımlılıkları önbelleğe al
-RUN mkdir -p src web/dist && echo 'fn main(){}' > src/main.rs && cargo build --release --features heic && rm -rf src target/release/deps/donustur*
+RUN mkdir -p src web/dist && echo 'fn main(){}' > src/main.rs && cargo build --release --features heic && rm -rf src target/release/deps/morphbox*
 COPY src ./src
 COPY --from=web /web/dist ./web/dist
-RUN cargo build --release --features heic && strip target/release/donustur
+RUN cargo build --release --features heic && strip target/release/morphbox
 
 # ---------- 3) çalışma ----------
 FROM debian:trixie-slim AS runtime
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ffmpeg libheif1 ca-certificates tini curl \
  && rm -rf /var/lib/apt/lists/* \
- && useradd --system --uid 10001 --home /data donustur \
- && mkdir -p /data && chown donustur:donustur /data
-COPY --from=build /src/target/release/donustur /usr/local/bin/donustur
-USER donustur
+ && useradd --system --uid 10001 --home /data morphbox \
+ && mkdir -p /data && chown morphbox:morphbox /data
+COPY --from=build /src/target/release/morphbox /usr/local/bin/morphbox
+USER morphbox
 WORKDIR /data
 VOLUME ["/data"]
-ENV DONUSTUR_HOST=0.0.0.0 \
-    DONUSTUR_PORT=8080 \
-    DONUSTUR_DATA_DIR=/data \
-    RUST_LOG=donustur=info
+ENV MORPHBOX_HOST=0.0.0.0 \
+    MORPHBOX_PORT=8080 \
+    MORPHBOX_DATA_DIR=/data \
+    RUST_LOG=morphbox=info
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s CMD curl -fsS http://127.0.0.1:8080/api/health || exit 1
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["donustur"]
+CMD ["morphbox"]

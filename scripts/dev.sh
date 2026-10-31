@@ -3,8 +3,8 @@
 set -e
 cd "$(dirname "$0")/.."
 export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
-export RUST_LOG="${RUST_LOG:-donustur=debug,tower_http=info}"
-export DONUSTUR_HWACCEL="${DONUSTUR_HWACCEL:-auto}"
+export RUST_LOG="${RUST_LOG:-morphbox=debug,tower_http=info}"
+export MORPHBOX_HWACCEL="${MORPHBOX_HWACCEL:-auto}"
 # libheif kuruluysa HEIC desteğiyle derle
 FEATURES=""
 if command -v pkg-config >/dev/null 2>&1 && pkg-config --atleast-version=1.17 libheif 2>/dev/null; then

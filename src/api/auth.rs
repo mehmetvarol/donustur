@@ -1,4 +1,4 @@
-//! İsteğe bağlı tek şifre. `DONUSTUR_PASSWORD` tanımlıysa `/api/*` (health hariç)
+//! İsteğe bağlı tek şifre. `MORPHBOX_PASSWORD` tanımlıysa `/api/*` (health hariç)
 //! `Authorization: Bearer <şifre>` ya da `?token=<şifre>` ister (SSE/indirme için).
 
 use axum::{

@@ -127,7 +127,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem("donustur.lang", lang);
+      localStorage.setItem("morphbox.lang", lang);
     } catch {
       /* yok */
     }

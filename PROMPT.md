@@ -7,6 +7,11 @@ project: "[[donustur]]"
 related_concepts: ["[[claude-code]]", "[[rust]]", "[[ffmpeg]]"]
 ---
 
+> [!note] Ad değişikliği
+> Bu prompt ürünü ilk adıyla, **Dönüştür** olarak tarif eder. Proje sonradan **Morphbox** adını aldı;
+> ortam değişkenleri artık `MORPHBOX_*`, ikili `morphbox`, imaj `ghcr.io/mehmetvarol/morphbox`.
+> Metin, projeyi üreten prompt olarak olduğu gibi bırakıldı.
+
 # Dönüştür — Claude Code promptu (nihai sürüm)
 
 > Kullanıcının ham isteği: "Rust ile, web'den görsel/video yükleyip istediğim formata çeviren

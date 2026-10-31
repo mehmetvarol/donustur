@@ -33,7 +33,7 @@ async fn app(password: Option<&str>) -> (Router, tempfile::TempDir) {
 }
 
 fn multipart(fields: &[(&str, &str)], file: Option<(&str, &str, &[u8])>) -> (String, Vec<u8>) {
-    let b = "----donusturTest9f3a";
+    let b = "----morphboxTest9f3a";
     let mut body = Vec::new();
     for (k, v) in fields {
         body.extend_from_slice(

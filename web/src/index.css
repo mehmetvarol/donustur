@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Dönüştür tema tokenları — tasarım: "Dönüştür Arayüz Tasarımı" kanvası.
+/* Morphbox tema tokenları — tasarım: "Morphbox Arayüz Tasarımı" kanvası.
    Renkler :root/.dark değişkenlerinden gelir; Tailwind sınıfları (bg-surface, text-muted…) bunları okur. */
 @theme inline {
   --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, -apple-system, "Segoe UI", sans-serif;

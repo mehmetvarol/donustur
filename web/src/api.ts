@@ -75,15 +75,15 @@ let token: string | null = null;
 export function setToken(t: string | null) {
   token = t;
   try {
-    if (t) sessionStorage.setItem("donustur.token", t);
-    else sessionStorage.removeItem("donustur.token");
+    if (t) sessionStorage.setItem("morphbox.token", t);
+    else sessionStorage.removeItem("morphbox.token");
   } catch {
     /* özel pencere */
   }
 }
 export function loadToken(): string | null {
   try {
-    token = sessionStorage.getItem("donustur.token");
+    token = sessionStorage.getItem("morphbox.token");
   } catch {
     token = null;
   }

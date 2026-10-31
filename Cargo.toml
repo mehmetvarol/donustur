@@ -1,10 +1,10 @@
 [package]
-name = "donustur"
+name = "morphbox"
 version = "0.1.1"
 edition = "2024"
 description = "Kendi sunucunda çalışan görsel/video/ses dönüştürücü (axum + ffmpeg + image)"
 license = "MIT"
-repository = "https://github.com/mehmetvarol/donustur"
+repository = "https://github.com/mehmetvarol/morphbox"
 rust-version = "1.85"
 
 [features]

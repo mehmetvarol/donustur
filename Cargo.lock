@@ -427,37 +427,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "donustur"
-version = "0.1.1"
-dependencies = [
- "anyhow",
- "axum",
- "chrono",
- "dashmap",
- "futures",
- "http",
- "http-body-util",
- "image",
- "infer",
- "libheif-rs",
- "mime_guess",
- "rust-embed",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror",
- "tokio",
- "tokio-stream",
- "tokio-util",
- "tower",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "uuid",
- "webp",
-]
-
-[[package]]
 name = "either"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1164,6 +1133,37 @@ dependencies = [
  "libc",
  "wasi",
  "windows-sys",
+]
+
+[[package]]
+name = "morphbox"
+version = "0.1.1"
+dependencies = [
+ "anyhow",
+ "axum",
+ "chrono",
+ "dashmap",
+ "futures",
+ "http",
+ "http-body-util",
+ "image",
+ "infer",
+ "libheif-rs",
+ "mime_guess",
+ "rust-embed",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "webp",
 ]
 
 [[package]]

@@ -4,7 +4,7 @@
 export type Lang = "tr" | "en";
 
 const tr = {
-  title: "Dönüştür",
+  title: "Morphbox",
   heroTitle: "Dosyanı bırak, formatı seç, indir.",
   heroText: "Görsel, video ve ses dosyalarını kendi sunucunda dönüştür. Hesap açmazsın, dosyan üçüncü bir servise gitmez.",
   step1Title: "Dosyayı bırak",
@@ -158,7 +158,7 @@ const tr = {
 export type Key = keyof typeof tr;
 
 const en: Record<Key, string> = {
-  title: "Dönüştür",
+  title: "Morphbox",
   heroTitle: "Drop a file, pick a format, download.",
   heroText: "Convert images, video and audio on your own server. No account, and your file never goes to a third-party service.",
   step1Title: "Drop the file",
@@ -313,7 +313,7 @@ const dict: Record<Lang, Record<Key, string>> = { tr, en };
 
 export function detectLang(): Lang {
   try {
-    const saved = localStorage.getItem("donustur.lang");
+    const saved = localStorage.getItem("morphbox.lang");
     if (saved === "tr" || saved === "en") return saved;
   } catch {
     /* yok */

@@ -1,4 +1,4 @@
-# Hazır Docker imajı: ghcr.io/<sahip>/donustur
+# Hazır Docker imajı: ghcr.io/<sahip>/morphbox
 # main'e her push → :main ve :latest, v* etiketi → :1.2.3 ve :1.2
 # amd64 ve arm64 ayrı (yerel) makinelerde derlenir, sonra tek çoklu-mimari etikette birleşir.
 name: Image

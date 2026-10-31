@@ -12,14 +12,14 @@ help: ## bu listeyi göster
 web: ## ön yüzü derle (web/dist)
 	cd web && npm install --no-audit --no-fund && npm run build && touch dist/.gitkeep
 
-build: web ## ön yüz + release ikili (target/release/donustur)
+build: web ## ön yüz + release ikili (target/release/morphbox)
 	$(CARGO) build --release
 
 build-heic: web ## HEIC destekli release (brew install libheif pkgconf gerekir)
 	$(CARGO) build --release --features heic
 
-run: build ## release ikiliyi çalıştır (HEIC için: make build-heic && ./target/release/donustur)
-	DONUSTUR_HWACCEL=auto ./target/release/donustur
+run: build ## release ikiliyi çalıştır (HEIC için: make build-heic && ./target/release/morphbox)
+	MORPHBOX_HWACCEL=auto ./target/release/morphbox
 
 dev: ## geliştirme: cargo run (ön yüz web/dist'ten; ayrı pencerede `cd web && npm run dev` ile HMR)
 	sh scripts/dev.sh
@@ -36,7 +36,7 @@ fmt: ## kodu biçimle
 	$(CARGO) fmt
 
 docker: ## docker imajı
-	$(DOCKER) build -t donustur:latest .
+	$(DOCKER) build -t morphbox:latest .
 
 docker-run: ## compose ile ayağa kaldır
 	$(DOCKER) compose up -d --build
@@ -47,8 +47,8 @@ clean: ## derleme çıktıları
 
 launchd: ## macOS açılışta başlatma plist'ini bu makineye göre üret (target/)
 	@mkdir -p target
-	@sed -e "s|__REPO__|$(CURDIR)|g" -e "s|__HOME__|$(HOME)|g" deploy/com.donustur.server.plist > target/com.donustur.server.plist
-	@plutil -lint target/com.donustur.server.plist
+	@sed -e "s|__REPO__|$(CURDIR)|g" -e "s|__HOME__|$(HOME)|g" deploy/com.morphbox.server.plist > target/com.morphbox.server.plist
+	@plutil -lint target/com.morphbox.server.plist
 	@echo "Kurmak için:"
-	@echo "  cp target/com.donustur.server.plist ~/Library/LaunchAgents/"
-	@echo "  launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.donustur.server.plist"
+	@echo "  cp target/com.morphbox.server.plist ~/Library/LaunchAgents/"
+	@echo "  launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.morphbox.server.plist"

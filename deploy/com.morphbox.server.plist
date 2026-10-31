@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  macOS'ta açılışta otomatik başlatma (kullanıcı LaunchAgent). Bu bir ŞABLON:
+  Repo ve ev dizini yer tutucularını `make launchd` bu makineye göre doldurur.
+  Kurulum:
+    make build                       # ya da make build-heic
+    make launchd                     # target/com.morphbox.server.plist üretir
+    cp target/com.morphbox.server.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.morphbox.server.plist
+  Kaldırma:
+    launchctl bootout gui/$(id -u)/com.morphbox.server
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.morphbox.server</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__REPO__/target/release/morphbox</string>
+  </array>
+  <key>WorkingDirectory</key><string>__REPO__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>MORPHBOX_HOST</key><string>127.0.0.1</string>
+    <key>MORPHBOX_PORT</key><string>8080</string>
+    <key>MORPHBOX_DATA_DIR</key><string>__HOME__/Library/Application Support/Morphbox</string>
+    <key>MORPHBOX_HWACCEL</key><string>auto</string>
+    <key>RUST_LOG</key><string>morphbox=info</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>__HOME__/Library/Logs/morphbox.log</string>
+  <key>StandardErrorPath</key><string>__HOME__/Library/Logs/morphbox.log</string>
+</dict>
+</plist>

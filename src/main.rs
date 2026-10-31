@@ -1,4 +1,4 @@
-//! Dönüştür — kendi sunucunda çalışan görsel/video/ses dönüştürücü.
+//! Morphbox — kendi sunucunda çalışan görsel/video/ses dönüştürücü.
 
 mod api;
 mod assets;
@@ -20,7 +20,7 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(
             EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("donustur=info,tower_http=warn")),
+                .unwrap_or_else(|_| EnvFilter::new("morphbox=info,tower_http=warn")),
         )
         .with(tracing_subscriber::fmt::layer().compact())
         .init();
@@ -84,7 +84,7 @@ async fn main() -> anyhow::Result<()> {
 
     let addr = format!("{}:{}", config.host, config.port);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
-    tracing::info!(%addr, workers = config.workers, auth = config.password.is_some(), "Dönüştür hazır → http://{}", addr.replace("0.0.0.0", "localhost"));
+    tracing::info!(%addr, workers = config.workers, auth = config.password.is_some(), "Morphbox hazır → http://{}", addr.replace("0.0.0.0", "localhost"));
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown())
         .await?;

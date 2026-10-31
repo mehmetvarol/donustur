@@ -1,4 +1,4 @@
-# Dönüştür
+# Morphbox
 
 [English](README.en.md)
 
@@ -24,7 +24,7 @@ yalnız senin sunucunda işlenir ve 60 dakika sonra silinir.
 
 ## Kurulum
 
-Her kurulum kendi kopyasıdır: başkası senin sunucunu değil, kendi bilgisayarındaki Dönüştür'ü
+Her kurulum kendi kopyasıdır: başkası senin sunucunu değil, kendi bilgisayarındaki Morphbox'ı
 kullanır. Hepsi sonunda http://localhost:8080 adresini açar.
 
 ### 1. Hazır imaj (en kolay)
@@ -32,16 +32,16 @@ kullanır. Hepsi sonunda http://localhost:8080 adresini açar.
 Yalnız [Docker](https://docs.docker.com/get-docker/) gerekir; Windows, Linux ve macOS'ta çalışır.
 
 ```bash
-docker run -d --name donustur -p 8080:8080 -v donustur-data:/data --restart unless-stopped ghcr.io/mehmetvarol/donustur:latest
+docker run -d --name morphbox -p 8080:8080 -v morphbox-data:/data --restart unless-stopped ghcr.io/mehmetvarol/morphbox:latest
 ```
 
-Şifre istersen `-e DONUSTUR_PASSWORD=...` ekle. İmajı `main`'e her gönderimde GitHub Actions
+Şifre istersen `-e MORPHBOX_PASSWORD=...` ekle. İmajı `main`'e her gönderimde GitHub Actions
 yayınlar (`.github/workflows/image.yml`); sürüm etiketleri `v0.2.0` gibi `v*` ile gelir.
 
 ### 2. Kaynaktan, Docker ile
 
 ```bash
-git clone https://github.com/mehmetvarol/donustur.git && cd donustur
+git clone https://github.com/mehmetvarol/morphbox.git && cd morphbox
 docker compose up -d --build
 ```
 
@@ -64,27 +64,27 @@ Gerekenler: [Rust](https://rustup.rs), Node 22, ffmpeg; HEIC için libheif ≥1.
 ```bash
 brew install ffmpeg libheif pkgconf     # Debian/Ubuntu: apt install ffmpeg libheif-dev clang pkg-config
 make build-heic                          # HEIC'siz: make build
-./target/release/donustur
+./target/release/morphbox
 ```
 
-Donanım hızlandırma (macOS VideoToolbox) için `DONUSTUR_HWACCEL=auto`; başarısız olursa kendiliğinden
+Donanım hızlandırma (macOS VideoToolbox) için `MORPHBOX_HWACCEL=auto`; başarısız olursa kendiliğinden
 libx264'e düşer. Docker içindeki Linux VideoToolbox'ı kullanamaz; Mac'te en hızlısı bu yoldur.
 
 **macOS'ta açılışta başlatma:** `make launchd` bu makineye göre bir LaunchAgent dosyası üretir ve
-kurulum komutlarını yazar (şablon: `deploy/com.donustur.server.plist`).
+kurulum komutlarını yazar (şablon: `deploy/com.morphbox.server.plist`).
 
 Geliştirme: `make dev` (ikili, 8080) + ayrı pencerede `cd web && npm run dev` (Vite, 5173,
 `/api`'yi 8080'e proxy'ler).
 
 ### İnternete açarken
 
-Dönüştür ev/ofis ölçeği için tasarlandı. Herkese açık bir adreste çalıştıracaksan:
+Morphbox ev/ofis ölçeği için tasarlandı. Herkese açık bir adreste çalıştıracaksan:
 
-1. `DONUSTUR_PASSWORD` ver; yoksa herkes senin işlemcinle dönüştürür.
+1. `MORPHBOX_PASSWORD` ver; yoksa herkes senin işlemcinle dönüştürür.
 2. Önüne TLS'li bir ters vekil koy ve gövde sınırını yükselt. Caddy örneği:
 
 ```
-donustur.example.com {
+morphbox.example.com {
 	request_body {
 		max_size 2GB
 	}
@@ -96,17 +96,17 @@ donustur.example.com {
 
 | Değişken | Varsayılan | Açıklama |
 |---|---|---|
-| `DONUSTUR_HOST` | `0.0.0.0` | Dinlenen adres |
-| `DONUSTUR_PORT` | `8080` | Port |
-| `DONUSTUR_DATA_DIR` | `./data` | `uploads/` ve `outputs/` burada; açılışta temizlenir |
-| `DONUSTUR_WORKERS` | CPU/2 (≥1) | Eşzamanlı dönüşüm sayısı |
-| `DONUSTUR_TTL_MIN` | `60` | İş ve dosyaları kaç dakika sonra sil |
-| `DONUSTUR_MAX_UPLOAD_MB` | `2048` | Yükleme sınırı |
-| `DONUSTUR_JOB_TIMEOUT_MIN` | `30` | Tek iş için zaman aşımı |
-| `DONUSTUR_PASSWORD` | boş | Tanımlıysa `/api/*` için şifre (Bearer ya da `?token=`); ön yüz şifre ekranı gösterir |
-| `DONUSTUR_HWACCEL` | kapalı | `auto` → varsa `h264_videotoolbox` |
-| `DONUSTUR_FFMPEG` / `DONUSTUR_FFPROBE` | `ffmpeg` / `ffprobe` | İkili yolları |
-| `RUST_LOG` | `donustur=info` | Günlük seviyesi |
+| `MORPHBOX_HOST` | `0.0.0.0` | Dinlenen adres |
+| `MORPHBOX_PORT` | `8080` | Port |
+| `MORPHBOX_DATA_DIR` | `./data` | `uploads/` ve `outputs/` burada; açılışta temizlenir |
+| `MORPHBOX_WORKERS` | CPU/2 (≥1) | Eşzamanlı dönüşüm sayısı |
+| `MORPHBOX_TTL_MIN` | `60` | İş ve dosyaları kaç dakika sonra sil |
+| `MORPHBOX_MAX_UPLOAD_MB` | `2048` | Yükleme sınırı |
+| `MORPHBOX_JOB_TIMEOUT_MIN` | `30` | Tek iş için zaman aşımı |
+| `MORPHBOX_PASSWORD` | boş | Tanımlıysa `/api/*` için şifre (Bearer ya da `?token=`); ön yüz şifre ekranı gösterir |
+| `MORPHBOX_HWACCEL` | kapalı | `auto` → varsa `h264_videotoolbox` |
+| `MORPHBOX_FFMPEG` / `MORPHBOX_FFPROBE` | `ffmpeg` / `ffprobe` | İkili yolları |
+| `RUST_LOG` | `morphbox=info` | Günlük seviyesi |
 
 ## API
 
@@ -186,7 +186,7 @@ make lint     # clippy -D warnings + fmt --check
 ```
 src/
   main.rs          router, katmanlar, graceful shutdown
-  config.rs        DONUSTUR_* ortam değişkenleri
+  config.rs        MORPHBOX_* ortam değişkenleri
   formats.rs       hedef kataloğu + seçenek doğrulama (tek doğruluk kaynağı)
   probe.rs         sihirli bayt (infer), ffprobe, görsel boyutu
   jobs.rs          kuyruk (semaphore), watch ile ilerleme, iptal, TTL
