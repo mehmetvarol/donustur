@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  macOS'ta açılışta otomatik başlatma (kullanıcı LaunchAgent).
+  Kurulum:
+    make build
+    cp deploy/com.donustur.server.plist ~/Library/LaunchAgents/
+    # aşağıdaki iki yolu kendi kullanıcı adına göre düzenle
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.donustur.server.plist
+  Kaldırma:
+    launchctl bootout gui/$(id -u)/com.donustur.server
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.donustur.server</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/mehmetvarol/Documents/Projeler/donustur/target/release/donustur</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/mehmetvarol/Documents/Projeler/donustur</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>DONUSTUR_HOST</key><string>127.0.0.1</string>
+    <key>DONUSTUR_PORT</key><string>8080</string>
+    <key>DONUSTUR_DATA_DIR</key><string>/Users/mehmetvarol/Library/Application Support/Donustur</string>
+    <key>DONUSTUR_HWACCEL</key><string>auto</string>
+    <key>RUST_LOG</key><string>donustur=info</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/tmp/donustur.log</string>
+  <key>StandardErrorPath</key><string>/tmp/donustur.log</string>
+</dict>
+</plist>
