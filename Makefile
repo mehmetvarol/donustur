@@ -4,7 +4,7 @@ export PATH := $(HOME)/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$(PATH)
 CARGO := $(shell command -v cargo 2>/dev/null || echo $(HOME)/.cargo/bin/cargo)
 DOCKER := $(shell command -v docker 2>/dev/null || echo /opt/homebrew/bin/docker)
 
-.PHONY: help web build run dev test lint fmt docker docker-run clean
+.PHONY: help web build run dev test lint fmt docker docker-run clean launchd
 
 help: ## bu listeyi göster
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -44,3 +44,11 @@ docker-run: ## compose ile ayağa kaldır
 clean: ## derleme çıktıları
 	$(CARGO) clean
 	rm -rf web/dist/* && touch web/dist/.gitkeep
+
+launchd: ## macOS açılışta başlatma plist'ini bu makineye göre üret (target/)
+	@mkdir -p target
+	@sed -e "s|__REPO__|$(CURDIR)|g" -e "s|__HOME__|$(HOME)|g" deploy/com.donustur.server.plist > target/com.donustur.server.plist
+	@plutil -lint target/com.donustur.server.plist
+	@echo "Kurmak için:"
+	@echo "  cp target/com.donustur.server.plist ~/Library/LaunchAgents/"
+	@echo "  launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.donustur.server.plist"

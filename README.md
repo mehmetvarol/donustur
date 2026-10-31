@@ -1,38 +1,44 @@
 # Dönüştür
 
+[English](README.en.md)
+
 Kendi sunucunda çalışan görsel / video / ses dönüştürücü. Tarayıcıdan dosyayı bırak, hedef
-formatı seç, ilerlemeyi canlı izle, indir. Hesap yok, veritabanı yok, dış servis yok.
+formatı seç, ilerlemeyi canlı izle, indir. Hesap yok, veritabanı yok, dış servis yok: dosyalar
+yalnız senin sunucunda işlenir ve 60 dakika sonra silinir.
 
 - **Arka uç:** Rust (axum 0.8 + tokio). Görseller saf Rust (`image`, `webp`, `ravif`); video/ses
   sistemdeki `ffmpeg` alt süreç olarak (`-progress pipe:1` ile gerçek yüzde).
 - **Ön yüz:** Vite + React 19 + TypeScript + Tailwind v4; `rust-embed` ile **tek ikiliye gömülü**.
   Yazı tipleri (Bricolage Grotesque, Atkinson Hyperlegible Next/Mono) pakete gömülü; Google Fonts'a
   istek gitmez, CSP `default-src 'self'` bozulmaz.
-- **Dağıtım:** `cargo build --release` → tek dosya; ya da `docker compose up`.
+- **Dağıtım:** hazır Docker imajı (amd64 + arm64), `docker compose` ya da tek ikili.
 
-## Hızlı başlangıç (macOS / Linux)
+## Kurulum
 
-```bash
-brew install ffmpeg            # Linux: apt install ffmpeg
-make build                     # ön yüz + release ikili
-./target/release/donustur      # http://localhost:8080
-```
+Her kurulum kendi kopyasıdır: başkası senin sunucunu değil, kendi bilgisayarındaki Dönüştür'ü
+kullanır. Hepsi sonunda http://localhost:8080 adresini açar.
 
-Donanım hızlandırma (macOS VideoToolbox) için `DONUSTUR_HWACCEL=auto`. Başarısız olursa
-otomatik olarak libx264'e düşer.
+### 1. Hazır imaj (en kolay)
 
-Geliştirme: `make dev` (ikili, 8080) + ayrı pencerede `cd web && npm run dev` (Vite, 5173,
-`/api`'yi 8080'e proxy'ler).
-
-## Docker
+Yalnız [Docker](https://docs.docker.com/get-docker/) gerekir; Windows, Linux ve macOS'ta çalışır.
 
 ```bash
-docker compose up -d --build   # http://localhost:8080, veriler `donustur-data` volume'ünde
+docker run -d --name donustur -p 8080:8080 -v donustur-data:/data --restart unless-stopped ghcr.io/mehmetvarol/donustur:latest
 ```
 
-İmaj: `debian:trixie-slim` + ffmpeg + libheif; root olmayan kullanıcı; `HEALTHCHECK`
-`/api/health`. Docker imajı **HEIC desteğiyle** derlenir (`--features heic`). Taban trixie'dir
-çünkü bookworm'daki libheif 1.15, `libheif-rs`'in istediği ≥1.17'nin altında.
+Şifre istersen `-e DONUSTUR_PASSWORD=...` ekle. İmajı `main`'e her gönderimde GitHub Actions
+yayınlar (`.github/workflows/image.yml`); sürüm etiketleri `v0.2.0` gibi `v*` ile gelir.
+
+### 2. Kaynaktan, Docker ile
+
+```bash
+git clone https://github.com/mehmetvarol/donustur.git && cd donustur
+docker compose up -d --build
+```
+
+İlk derleme Rust yüzünden birkaç dakika sürer. İmaj: `debian:trixie-slim` + ffmpeg + libheif, root
+olmayan kullanıcı, `HEALTHCHECK` `/api/health`, **HEIC desteği açık**. Taban trixie'dir çünkü
+bookworm'daki libheif 1.15, `libheif-rs`'in istediği ≥1.17'nin altında.
 
 macOS'ta Docker Desktop yerine [colima](https://github.com/abiosoft/colima) yeter:
 
@@ -40,7 +46,41 @@ macOS'ta Docker Desktop yerine [colima](https://github.com/abiosoft/colima) yete
 brew install colima docker docker-compose
 mkdir -p ~/.docker/cli-plugins && ln -sfn /opt/homebrew/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/
 colima start --cpu 4 --memory 6 --vm-type vz
-docker compose up -d --build
+```
+
+### 3. Docker'sız (macOS / Linux)
+
+Gerekenler: [Rust](https://rustup.rs), Node 22, ffmpeg; HEIC için libheif ≥1.17.
+
+```bash
+brew install ffmpeg libheif pkgconf     # Debian/Ubuntu: apt install ffmpeg libheif-dev clang pkg-config
+make build-heic                          # HEIC'siz: make build
+./target/release/donustur
+```
+
+Donanım hızlandırma (macOS VideoToolbox) için `DONUSTUR_HWACCEL=auto`; başarısız olursa kendiliğinden
+libx264'e düşer. Docker içindeki Linux VideoToolbox'ı kullanamaz; Mac'te en hızlısı bu yoldur.
+
+**macOS'ta açılışta başlatma:** `make launchd` bu makineye göre bir LaunchAgent dosyası üretir ve
+kurulum komutlarını yazar (şablon: `deploy/com.donustur.server.plist`).
+
+Geliştirme: `make dev` (ikili, 8080) + ayrı pencerede `cd web && npm run dev` (Vite, 5173,
+`/api`'yi 8080'e proxy'ler).
+
+### İnternete açarken
+
+Dönüştür ev/ofis ölçeği için tasarlandı. Herkese açık bir adreste çalıştıracaksan:
+
+1. `DONUSTUR_PASSWORD` ver; yoksa herkes senin işlemcinle dönüştürür.
+2. Önüne TLS'li bir ters vekil koy ve gövde sınırını yükselt. Caddy örneği:
+
+```
+donustur.example.com {
+	request_body {
+		max_size 2GB
+	}
+	reverse_proxy localhost:8080
+}
 ```
 
 ## Ortam değişkenleri
@@ -146,8 +186,8 @@ src/
   api/             health, formats, upload (akışla diske), SSE, download, auth
   assets.rs        rust-embed ile web/dist
 web/               Vite + React + TS + Tailwind
-deploy/            launchd plist (macOS açılışta başlat)
+deploy/            launchd plist şablonu (make launchd doldurur)
 tests/fixtures/    HEIC örnek dosyası
 ```
 
-Lisans: MIT.
+Lisans: [MIT](LICENSE). Yazı tipleri SIL Open Font License 1.1 ile (`@fontsource-variable/*`).

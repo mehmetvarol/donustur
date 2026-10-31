@@ -1,0 +1,103 @@
+# Hazır Docker imajı: ghcr.io/<sahip>/donustur
+# main'e her push → :main ve :latest, v* etiketi → :1.2.3 ve :1.2
+# amd64 ve arm64 ayrı (yerel) makinelerde derlenir, sonra tek çoklu-mimari etikette birleşir.
+name: Image
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: İmaj adı (küçük harf)
+        run: |
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          p='${{ matrix.platform }}'
+          echo "PAIR=${p//\//-}" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ env.PAIR }}
+          cache-to: type=gha,scope=${{ env.PAIR }},mode=max
+      - name: Özeti kaydet
+        run: |
+          mkdir -p "${{ runner.temp }}/digests"
+          d='${{ steps.build.outputs.digest }}'
+          touch "${{ runner.temp }}/digests/${d#sha256:}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ env.PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: İmaj adı (küçük harf)
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+      - name: Çoklu-mimari etiketi oluştur
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          args=()
+          while IFS= read -r t; do args+=(-t "$t"); done < <(jq -r '.tags[]' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          for d in *; do args+=("${IMAGE}@sha256:${d}"); done
+          docker buildx imagetools create "${args[@]}"
+      - name: Denetle
+        run: docker buildx imagetools inspect "${IMAGE}:${{ steps.meta.outputs.version }}"

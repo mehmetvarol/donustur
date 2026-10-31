@@ -44,7 +44,9 @@ jobs:
       - run: cargo test --features heic
       - run: cargo build --release --features heic
 
+  # PR'da yalnız derlenebildiğini dener; main'de yayını image.yml yapar
   docker:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     needs: rust
     steps:
