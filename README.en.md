@@ -59,6 +59,9 @@ make build-heic                          # without HEIC: make build
 ./target/release/morphbox
 ```
 
+By default it only listens on this computer. To use it from other devices on your network, start it
+with `MORPHBOX_HOST=0.0.0.0`, and consider setting `MORPHBOX_PASSWORD` too.
+
 Set `MORPHBOX_HWACCEL=auto` for macOS VideoToolbox; it falls back to libx264 if that fails. Linux
 inside Docker cannot use VideoToolbox, so on a Mac this is the fastest option.
 
@@ -85,7 +88,7 @@ morphbox.example.com {
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `MORPHBOX_HOST` | `0.0.0.0` | Listen address |
+| `MORPHBOX_HOST` | `127.0.0.1` | Listen address. Defaults to this computer only; use `0.0.0.0` for other devices on your network (the Docker image does) |
 | `MORPHBOX_PORT` | `8080` | Port |
 | `MORPHBOX_DATA_DIR` | `./data` | Holds `uploads/` and `outputs/`; wiped at startup |
 | `MORPHBOX_WORKERS` | CPUs/2 (≥1) | Concurrent conversions |

@@ -67,6 +67,9 @@ make build-heic                          # HEIC'siz: make build
 ./target/release/morphbox
 ```
 
+Varsayılan olarak yalnız bu bilgisayardan açılır. Telefon gibi aynı ağdaki cihazlardan da kullanmak
+istersen `MORPHBOX_HOST=0.0.0.0` ile başlat; o zaman `MORPHBOX_PASSWORD` vermeyi de düşün.
+
 Donanım hızlandırma (macOS VideoToolbox) için `MORPHBOX_HWACCEL=auto`; başarısız olursa kendiliğinden
 libx264'e düşer. Docker içindeki Linux VideoToolbox'ı kullanamaz; Mac'te en hızlısı bu yoldur.
 
@@ -96,7 +99,7 @@ morphbox.example.com {
 
 | Değişken | Varsayılan | Açıklama |
 |---|---|---|
-| `MORPHBOX_HOST` | `0.0.0.0` | Dinlenen adres |
+| `MORPHBOX_HOST` | `127.0.0.1` | Dinlenen adres. Varsayılan yalnız bu bilgisayar; aynı ağdaki cihazlar için `0.0.0.0` (Docker imajında böyle) |
 | `MORPHBOX_PORT` | `8080` | Port |
 | `MORPHBOX_DATA_DIR` | `./data` | `uploads/` ve `outputs/` burada; açılışta temizlenir |
 | `MORPHBOX_WORKERS` | CPU/2 (≥1) | Eşzamanlı dönüşüm sayısı |

@@ -34,7 +34,7 @@ impl Config {
             .map(|v| matches!(v.trim(), "auto" | "1" | "true" | "on"))
             .unwrap_or(false);
         Self {
-            host: env_or("MORPHBOX_HOST", "0.0.0.0".to_string()),
+            host: env_or("MORPHBOX_HOST", "127.0.0.1".to_string()),
             port: env_or("MORPHBOX_PORT", 8080),
             data_dir: PathBuf::from(env_or("MORPHBOX_DATA_DIR", "./data".to_string())),
             workers: env_or("MORPHBOX_WORKERS", default_workers).max(1),
