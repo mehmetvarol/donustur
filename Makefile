@@ -1,5 +1,8 @@
 SHELL := /bin/sh
 export PATH := $(HOME)/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$(PATH)
+# macOS'un make 3.81'i export edilen PATH'i komut aramada kullanmaz → tam yol
+CARGO := $(shell command -v cargo 2>/dev/null || echo $(HOME)/.cargo/bin/cargo)
+DOCKER := $(shell command -v docker 2>/dev/null || echo /opt/homebrew/bin/docker)
 
 .PHONY: help web build run dev test lint fmt docker docker-run clean
 
@@ -10,10 +13,10 @@ web: ## ön yüzü derle (web/dist)
 	cd web && npm install --no-audit --no-fund && npm run build && touch dist/.gitkeep
 
 build: web ## ön yüz + release ikili (target/release/donustur)
-	cargo build --release
+	$(CARGO) build --release
 
 build-heic: web ## HEIC destekli release (brew install libheif pkgconf gerekir)
-	cargo build --release --features heic
+	$(CARGO) build --release --features heic
 
 run: build ## release ikiliyi çalıştır (HEIC için: make build-heic && ./target/release/donustur)
 	DONUSTUR_HWACCEL=auto ./target/release/donustur
@@ -22,22 +25,22 @@ dev: ## geliştirme: cargo run (ön yüz web/dist'ten; ayrı pencerede `cd web &
 	sh scripts/dev.sh
 
 test: ## rust testleri + ön yüz tip denetimi
-	cargo test
+	$(CARGO) test
 	cd web && npm run typecheck
 
 lint: ## clippy -D warnings + fmt --check
-	cargo clippy --all-targets -- -D warnings
-	cargo fmt --check
+	$(CARGO) clippy --all-targets -- -D warnings
+	$(CARGO) fmt --check
 
 fmt: ## kodu biçimle
-	cargo fmt
+	$(CARGO) fmt
 
 docker: ## docker imajı
-	docker build -t donustur:latest .
+	$(DOCKER) build -t donustur:latest .
 
 docker-run: ## compose ile ayağa kaldır
-	docker compose up -d --build
+	$(DOCKER) compose up -d --build
 
 clean: ## derleme çıktıları
-	cargo clean
+	$(CARGO) clean
 	rm -rf web/dist/* && touch web/dist/.gitkeep
