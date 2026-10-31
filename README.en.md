@@ -8,6 +8,15 @@ files are processed only on your own server and deleted after 60 minutes.
 
 *Dönüştür* is Turkish for "convert". The interface ships in Turkish and English.
 
+![Start screen: drop zone and supported formats](docs/screenshots/en/start.webp)
+
+<p>
+  <img src="docs/screenshots/en/list.webp" alt="Conversion list: format choice, quality setting, running and finished jobs" width="66%">
+  <img src="docs/screenshots/en/mobile-dark.webp" alt="Mobile dark theme: format cards and sticky convert button" width="30%">
+</p>
+
+<sub>Start screen · conversion list (image being set up, video at 35%, audio ready) · mobile dark theme</sub>
+
 - **Backend:** Rust (axum 0.8 + tokio). Images in pure Rust (`image`, `webp`, `ravif`); video and
   audio through the system `ffmpeg` as a subprocess (`-progress pipe:1` for real percentages).
 - **Frontend:** Vite + React 19 + TypeScript + Tailwind v4, **embedded in the single binary** with

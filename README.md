@@ -6,6 +6,15 @@ Kendi sunucunda çalışan görsel / video / ses dönüştürücü. Tarayıcıda
 formatı seç, ilerlemeyi canlı izle, indir. Hesap yok, veritabanı yok, dış servis yok: dosyalar
 yalnız senin sunucunda işlenir ve 60 dakika sonra silinir.
 
+![Başlangıç ekranı: dosya bırakma alanı ve desteklenen formatlar](docs/screenshots/tr/start.webp)
+
+<p>
+  <img src="docs/screenshots/tr/list.webp" alt="Dönüştürme listesi: format seçimi, kalite ayarı, süren ve biten dönüşümler" width="66%">
+  <img src="docs/screenshots/tr/mobile-dark.webp" alt="Mobilde koyu tema: format kartları ve ekrana yapışık dönüştür düğmesi" width="30%">
+</p>
+
+<sub>Başlangıç ekranı · dönüştürme listesi (görsel ayarda, video %35, ses hazır) · mobil koyu tema</sub>
+
 - **Arka uç:** Rust (axum 0.8 + tokio). Görseller saf Rust (`image`, `webp`, `ravif`); video/ses
   sistemdeki `ffmpeg` alt süreç olarak (`-progress pipe:1` ile gerçek yüzde).
 - **Ön yüz:** Vite + React 19 + TypeScript + Tailwind v4; `rust-embed` ile **tek ikiliye gömülü**.
