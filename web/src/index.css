@@ -1,16 +1,91 @@
 @import "tailwindcss";
 
-@theme {
-  --color-brand: #0f9d7a;
-  --color-brand-strong: #0b7d61;
-  --color-brand-soft: #d8f3ea;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+/* Dönüştür tema tokenları — tasarım: "Dönüştür Arayüz Tasarımı" kanvası.
+   Renkler :root/.dark değişkenlerinden gelir; Tailwind sınıfları (bg-surface, text-muted…) bunları okur. */
+@theme inline {
+  --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-ground: var(--c-ground);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-sunken: var(--c-sunken);
+  --color-segment: var(--c-segment);
+  --color-line: var(--c-line);
+  --color-line-soft: var(--c-line-soft);
+  --color-control: var(--c-control);
+  --color-control-strong: var(--c-control-strong);
+  --color-tile-line: var(--c-tile-line);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-accent: var(--c-accent);
+  --color-accent-hover: var(--c-accent-hover);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-accent-ink: var(--c-accent-ink);
+  --color-accent-tint: var(--c-accent-tint);
+  --color-on-accent: var(--c-on-accent);
+  --color-danger: var(--c-danger);
+  --color-danger-ink: var(--c-danger-ink);
+  --color-danger-soft: var(--c-danger-soft);
+  --color-warn-ink: var(--c-warn-ink);
+  --color-warn-soft: var(--c-warn-soft);
 }
 
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+  --c-ground: #f4f4f0;
+  --c-surface: #ffffff;
+  --c-surface-2: #fafaf8;
+  --c-sunken: #ecece7;
+  --c-segment: #e9e9e4;
+  --c-line: #e2e2dc;
+  --c-line-soft: #ecece7;
+  --c-control: #c9cbc4;
+  --c-control-strong: #8a8f8b;
+  --c-tile-line: #d9dad4;
+  --c-ink: #16181a;
+  --c-muted: #5a605c;
+  --c-accent: #0b6e56;
+  --c-accent-hover: #095c48;
+  --c-accent-soft: #e3f1eb;
+  --c-accent-ink: #07513f;
+  --c-accent-tint: #f1f8f4;
+  --c-on-accent: #ffffff;
+  --c-danger: #b42318;
+  --c-danger-ink: #9b1c12;
+  --c-danger-soft: #fcecea;
+  --c-warn-ink: #7a3e00;
+  --c-warn-soft: #fbf0e1;
+}
+
+.dark {
+  color-scheme: dark;
+  --c-ground: #0f1110;
+  --c-surface: #17191a;
+  --c-surface-2: #1b1e1d;
+  --c-sunken: #222624;
+  --c-segment: #222624;
+  --c-line: #2a2e2b;
+  --c-line-soft: #232725;
+  --c-control: #3a3f3c;
+  --c-control-strong: #6b716c;
+  --c-tile-line: #3a3f3c;
+  --c-ink: #ecede9;
+  --c-muted: #a1a7a2;
+  --c-accent: #3ccb9c;
+  --c-accent-hover: #5bddb3;
+  --c-accent-soft: #10291f;
+  --c-accent-ink: #7be3c1;
+  --c-accent-tint: #13261e;
+  --c-on-accent: #04241b;
+  --c-danger: #ff8a7a;
+  --c-danger-ink: #ff8a7a;
+  --c-danger-soft: #2c1512;
+  --c-warn-ink: #f5b76b;
+  --c-warn-soft: #2b1f0e;
 }
 
 html,
@@ -20,33 +95,59 @@ body,
 }
 
 body {
-  @apply bg-neutral-50 text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100;
+  margin: 0;
+  background: var(--c-ground);
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-*:focus-visible {
-  outline: 2px solid var(--color-brand);
-  outline-offset: 2px;
-  border-radius: 4px;
+:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 3px;
 }
 
-input[type="range"] {
-  accent-color: var(--color-brand);
+input[type="range"],
+input[type="checkbox"] {
+  accent-color: var(--c-accent);
 }
 
-@keyframes pulse-soft {
-  0%,
-  100% {
-    opacity: 1;
+summary {
+  list-style: none;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+.details-chevron {
+  transition: transform 150ms ease;
+}
+details[open] .details-chevron {
+  transform: rotate(90deg);
+}
+
+@keyframes indeterminate {
+  from {
+    left: -34%;
   }
-  50% {
-    opacity: 0.55;
+  to {
+    left: 100%;
   }
 }
-.animate-pulse-soft {
-  animation: pulse-soft 1.6s ease-in-out infinite;
+.animate-indeterminate {
+  animation: indeterminate 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .animate-indeterminate {
+    left: 0;
+    width: 100%;
+    opacity: 0.6;
+  }
+
   * {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;

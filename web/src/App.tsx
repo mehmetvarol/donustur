@@ -1,41 +1,84 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { ApiError, api, fmtBytes, loadToken, setToken, type Health, type JobView, type Target } from "./api";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { ApiError, api, loadToken, setToken, type Health, type JobView, type Target } from "./api";
+import Aside from "./components/Aside";
 import DropZone from "./components/DropZone";
 import FileCard from "./components/FileCard";
-import { detectLang, makeT, type Lang } from "./i18n";
+import { IconAlert, IconCheck, IconLogo } from "./components/Icons";
+import PasswordGate from "./components/PasswordGate";
+import Start from "./components/Start";
+import { detectLang, makeI18n, type I18n, type Lang } from "./i18n";
 import { reducer, type Item } from "./state";
 
-function PasswordGate({ t, onOk }: { t: ReturnType<typeof makeT>; onOk: () => void }) {
-  const [pw, setPw] = useState("");
-  const [err, setErr] = useState(false);
-  const [busy, setBusy] = useState(false);
+const container = "mx-auto box-border w-full max-w-[1200px] px-[clamp(16px,4vw,48px)]";
+
+function Header({ i, health, offline, lang, setLang }: { i: I18n; health: Health | null; offline: boolean; lang: Lang; setLang: (l: Lang) => void }) {
+  const { t } = i;
   return (
-    <form
-      className="mx-auto mt-24 flex w-full max-w-sm flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        const ok = await api.checkPassword(pw);
-        setBusy(false);
-        if (ok) {
-          setToken(pw);
-          onOk();
-        } else setErr(true);
-      }}
-    >
-      <h2 className="text-lg font-semibold">{t("password")}</h2>
-      <p className="text-sm text-neutral-500">{t("passwordHint")}</p>
-      <input type="password" autoFocus value={pw} onChange={(e) => { setPw(e.target.value); setErr(false); }} aria-invalid={err} aria-label={t("password")}
-        className="h-10 rounded-md border border-neutral-300 bg-white px-3 dark:border-neutral-700 dark:bg-neutral-950" />
-      {err && <p className="text-sm text-red-600" role="alert">{t("wrongPassword")}</p>}
-      <button type="submit" disabled={busy || !pw} className="h-10 rounded-md bg-brand font-medium text-white hover:bg-brand-strong disabled:opacity-50">{t("enter")}</button>
-    </form>
+    <header className="border-b border-line">
+      <div className={`${container} flex items-center justify-between gap-3 py-3.5`}>
+        <div className="flex items-center gap-2.5">
+          <span className="flex size-[34px] items-center justify-center rounded-[10px] bg-accent text-on-accent">
+            <IconLogo size={20} />
+          </span>
+          <span className="font-display text-[21px] leading-7 font-semibold tracking-[-0.015em]">{t("title")}</span>
+        </div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="inline-flex h-8 items-center gap-2 rounded-full border border-line bg-surface px-3 text-[13px] leading-[18px] text-muted" role="status" title={offline ? t("statusOffline") : t("statusReady")}>
+            <span className={`size-2 shrink-0 rounded-full ${offline ? "bg-danger" : "bg-accent"}`} aria-hidden="true" />
+            <span className="font-semibold whitespace-nowrap text-ink">
+              <span className="sm:hidden">{offline ? t("statusOfflineShort") : t("statusReadyShort")}</span>
+              <span className="hidden sm:inline">{offline ? t("statusOffline") : t("statusReady")}</span>
+            </span>
+            {health && !offline && <span className="hidden font-mono text-xs sm:inline">v{health.version}</span>}
+          </span>
+          <div role="group" aria-label={t("langGroup")} className="flex gap-0.5 rounded-[10px] bg-segment p-[3px]">
+            {(["tr", "en"] as Lang[]).map((l) => (
+              <button
+                key={l}
+                type="button"
+                lang={l}
+                aria-pressed={lang === l}
+                onClick={() => setLang(l)}
+                className={`h-[30px] min-w-10 cursor-pointer rounded-lg px-2.5 text-[13px] font-semibold transition-colors ${
+                  lang === l ? "bg-surface text-ink shadow-[0_1px_2px_rgba(22,24,26,0.08)]" : "text-muted hover:text-ink"
+                }`}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Footer({ i, health, offline }: { i: I18n; health: Health | null; offline: boolean }) {
+  const { t } = i;
+  return (
+    <footer className={`${container} mt-[clamp(48px,7vw,72px)] flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line pt-5 pb-7 text-[13px] leading-5 text-muted`}>
+      <span className="inline-flex items-center gap-2 font-semibold text-ink">
+        <span className={`size-2 rounded-full ${offline ? "bg-danger" : "bg-accent"}`} aria-hidden="true" />
+        {offline ? t("statusOffline") : t("footerRunning")}
+      </span>
+      {health && !offline && (
+        <>
+          <span className="font-mono text-xs">{health.ffmpeg ? `ffmpeg ${health.ffmpeg}` : t("ffmpegMissing")}</span>
+          {health.hwaccel && <span>{t("footerAccel")}</span>}
+          <span>
+            {health.running + health.queued === 0 ? t("footerQueueEmpty") : t("footerQueue", { r: health.running, q: health.queued })} · {t("footerWorkers", { n: health.workers })}
+          </span>
+          <span>{t("footerTtl", { n: health.ttl_min })}</span>
+        </>
+      )}
+    </footer>
   );
 }
 
 export default function App() {
   const [lang, setLang] = useState<Lang>(detectLang);
-  const t = makeT(lang);
+  const i = useMemo(() => makeI18n(lang), [lang]);
+  const { t } = i;
   const [health, setHealth] = useState<Health | null>(null);
   const [offline, setOffline] = useState(false);
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -62,19 +105,32 @@ export default function App() {
     };
     load();
     const id = setInterval(load, 10_000);
-    return () => { alive = false; clearInterval(id); };
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
   }, []);
 
   // katalog (yetki sonrası)
   useEffect(() => {
     if (!authed) return;
-    api.formats().then(setTargets).catch((e: ApiError) => {
-      if (e.status === 401) { setToken(null); setAuthed(false); }
-    });
+    api
+      .formats()
+      .then(setTargets)
+      .catch((e: ApiError) => {
+        if (e.status === 401) {
+          setToken(null);
+          setAuthed(false);
+        }
+      });
   }, [authed]);
 
   useEffect(() => {
-    try { localStorage.setItem("donustur.lang", lang); } catch { /* yok */ }
+    try {
+      localStorage.setItem("donustur.lang", lang);
+    } catch {
+      /* yok */
+    }
     document.documentElement.lang = lang;
   }, [lang]);
 
@@ -93,29 +149,41 @@ export default function App() {
       // bağlantı düştüyse son durumu bir kez sor
       es.close();
       sources.current.delete(localId);
-      api.job(jobId).then((job) => dispatch({ type: "jobUpdate", localId, job })).catch(() => dispatch({ type: "fail", localId, error: t("offline") }));
+      api
+        .job(jobId)
+        .then((job) => dispatch({ type: "jobUpdate", localId, job }))
+        .catch((e: ApiError) => dispatch({ type: "fail", localId, error: e.message, code: "network" }));
     };
-  }, [t]);
+  }, []);
 
-  const convert = useCallback(async (item: Item) => {
-    if (!item.target) return;
-    const ctrl = new AbortController();
-    aborts.current.set(item.localId, ctrl);
-    dispatch({ type: "uploadStart", localId: item.localId });
-    try {
-      const { id } = await api.upload(item.file, item.target, item.options, (pct) => dispatch({ type: "uploadPct", localId: item.localId, pct }), ctrl.signal);
-      const job = await api.job(id);
-      dispatch({ type: "uploaded", localId: item.localId, job });
-      subscribe(item.localId, id);
-    } catch (e) {
-      const err = e as ApiError;
-      if (err.code === "aborted") dispatch({ type: "cancelled", localId: item.localId });
-      else if (err.status === 401) { setToken(null); setAuthed(false); dispatch({ type: "reset", localId: item.localId }); }
-      else dispatch({ type: "fail", localId: item.localId, error: err.code === "too_large" ? `${t("tooLarge")} (${fmtBytes(health?.max_upload_bytes ?? 0)})` : err.message });
-    } finally {
-      aborts.current.delete(item.localId);
-    }
-  }, [health, subscribe, t]);
+  const convert = useCallback(
+    async (item: Item) => {
+      if (!item.target) return;
+      const ctrl = new AbortController();
+      aborts.current.set(item.localId, ctrl);
+      dispatch({ type: "uploadStart", localId: item.localId });
+      try {
+        const { id } = await api.upload(item.file, item.target, item.options, (pct) => dispatch({ type: "uploadPct", localId: item.localId, pct }), ctrl.signal);
+        const job = await api.job(id);
+        dispatch({ type: "uploaded", localId: item.localId, job });
+        subscribe(item.localId, id);
+      } catch (e) {
+        const err = e as ApiError;
+        if (err.code === "aborted") dispatch({ type: "cancelled", localId: item.localId });
+        else if (err.status === 401) {
+          setToken(null);
+          setAuthed(false);
+          dispatch({ type: "reset", localId: item.localId });
+        } else {
+          const code = err.code === "too_large" || err.status === 413 ? "too_large" : err.status === 0 ? "network" : err.code || `http_${err.status}`;
+          dispatch({ type: "fail", localId: item.localId, error: err.message, code });
+        }
+      } finally {
+        aborts.current.delete(item.localId);
+      }
+    },
+    [subscribe],
+  );
 
   const cancel = useCallback(async (item: Item) => {
     aborts.current.get(item.localId)?.abort();
@@ -132,77 +200,97 @@ export default function App() {
     dispatch({ type: "remove", localId: item.localId });
   }, []);
 
-  const idle = state.items.filter((i) => i.phase === "idle" && i.target);
-  const finished = state.items.some((i) => i.phase === "done" || i.phase === "failed" || i.phase === "cancelled");
-  const maxLabel = health ? fmtBytes(health.max_upload_bytes) : "";
+  const maxLabel = health ? i.bytes(health.max_upload_bytes) : "";
+  const ttl = health?.ttl_min ?? 60;
+  const items = state.items;
+  const idle = items.filter((x) => x.phase === "idle" && x.target && x.error !== "unsupported");
+  const busyN = items.filter((x) => x.phase === "uploading" || x.phase === "queued" || x.phase === "running").length;
+  const doneN = items.filter((x) => x.phase === "done").length;
+  const failN = items.filter((x) => x.phase === "failed").length;
+  const finished = items.some((x) => x.phase === "done" || x.phase === "failed" || x.phase === "cancelled");
+  const counts = [
+    t("countFiles", { n: items.length }),
+    idle.length ? t("countIdle", { n: idle.length }) : "",
+    busyN ? t("countBusy", { n: busyN }) : "",
+    doneN ? t("countDone", { n: doneN }) : "",
+    failN ? t("countFailed", { n: failN }) : "",
+  ].filter(Boolean);
+
+  const addFiles = (files: File[]) => dispatch({ type: "add", files, targets });
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-6 sm:py-10">
-      <header className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <img src="/favicon.svg" alt="" className="size-7" />
-            {t("title")}
-          </h1>
-          <p className="mt-1 text-sm text-neutral-500">{t("tagline")}</p>
-        </div>
-        <button type="button" onClick={() => setLang(lang === "tr" ? "en" : "tr")} className="rounded-md border border-neutral-300 px-2.5 py-1 text-xs hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800" aria-label="Language / Dil">
-          {t("language")}
-        </button>
-      </header>
+    <div className="flex min-h-screen flex-col">
+      <Header i={i} health={health} offline={offline} lang={lang} setLang={setLang} />
 
-      {offline && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300" role="alert">{t("offline")}</p>}
+      {offline && (
+        <div className={`${container} pt-4`}>
+          <p role="alert" className="m-0 flex items-start gap-2.5 rounded-xl bg-danger-soft px-4 py-3 text-ink">
+            <IconAlert size={20} className="mt-0.5 shrink-0 text-danger-ink" />
+            {t("offlineBanner")}
+          </p>
+        </div>
+      )}
 
       {authed === false ? (
-        <PasswordGate t={t} onOk={() => setAuthed(true)} />
+        <PasswordGate i={i} onOk={() => setAuthed(true)} />
+      ) : items.length === 0 ? (
+        <Start i={i} health={health} targets={targets} maxLabel={maxLabel} onFiles={addFiles} />
       ) : (
-        <main className="flex flex-1 flex-col gap-4">
-          <DropZone t={t} maxLabel={maxLabel} compact={state.items.length > 0} onFiles={(files) => dispatch({ type: "add", files, targets })} />
+        <div className={`${container} flex flex-1 flex-wrap items-start gap-8 pt-10`}>
+          <main className="flex min-w-0 flex-[999_1_640px] flex-col gap-5">
+            <DropZone i={i} maxLabel={maxLabel} variant="strip" onFiles={addFiles} />
 
-          {state.items.length > 0 && (
-            <>
-              <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="mt-2 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+              <div className="flex flex-col gap-1">
+                <h1 className="m-0 font-display text-[30px] leading-9 font-semibold tracking-[-0.02em]">{t("listTitle")}</h1>
+                <p className="m-0 text-sm leading-5 text-muted" aria-live="polite">{counts.join(" · ")}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
                 {finished && (
-                  <button type="button" onClick={() => dispatch({ type: "clearDone" })} className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800">
+                  <button type="button" onClick={() => dispatch({ type: "clearDone" })}
+                    className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl px-4 font-semibold text-ink transition-colors hover:bg-surface">
+                    <IconCheck size={18} />
                     {t("clearDone")}
                   </button>
                 )}
                 {idle.length > 1 && (
-                  <button type="button" onClick={() => idle.forEach(convert)} className="rounded-md bg-brand px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-strong">
-                    {t("convertAll")} ({idle.length})
+                  <button type="button" onClick={() => idle.forEach(convert)}
+                    className="inline-flex h-11 cursor-pointer items-center rounded-xl bg-accent px-5 font-semibold text-on-accent transition-colors hover:bg-accent-hover">
+                    {t("convertAll", { n: idle.length })}
                   </button>
                 )}
               </div>
-              <ul className="flex flex-col gap-3" aria-live="polite">
-                {state.items.map((item) => (
-                  <FileCard key={item.localId} item={item} targets={targets} t={t}
-                    onSetTarget={(id) => dispatch({ type: "setTarget", localId: item.localId, target: id, targets })}
-                    onSetOption={(k, v) => dispatch({ type: "setOption", localId: item.localId, key: k, value: v })}
-                    onToggleAdvanced={() => dispatch({ type: "toggleAdvanced", localId: item.localId })}
-                    onConvert={() => convert(item)}
-                    onCancel={() => cancel(item)}
-                    onRemove={() => remove(item)}
-                    onReset={() => dispatch({ type: "reset", localId: item.localId })} />
-                ))}
-              </ul>
-            </>
-          )}
-        </main>
+            </div>
+
+            <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
+              {items.map((item) => (
+                <FileCard
+                  key={item.localId}
+                  item={item}
+                  targets={targets}
+                  i={i}
+                  ttlMin={ttl}
+                  maxLabel={maxLabel}
+                  onSetTarget={(id) => dispatch({ type: "setTarget", localId: item.localId, target: id, targets })}
+                  onSetOption={(k, v) => dispatch({ type: "setOption", localId: item.localId, key: k, value: v })}
+                  onToggleAdvanced={() => dispatch({ type: "toggleAdvanced", localId: item.localId })}
+                  onConvert={() => convert(item)}
+                  onCancel={() => cancel(item)}
+                  onRemove={() => remove(item)}
+                  onReset={() => dispatch({ type: "reset", localId: item.localId })}
+                  onRetry={() => {
+                    dispatch({ type: "reset", localId: item.localId });
+                    convert(item);
+                  }}
+                />
+              ))}
+            </ul>
+          </main>
+          <Aside i={i} health={health} offline={offline} maxLabel={maxLabel} />
+        </div>
       )}
 
-      <footer className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-neutral-200 pt-3 text-xs text-neutral-500 dark:border-neutral-800">
-        <span className="inline-flex items-center gap-1.5">
-          <span className={`inline-block size-2 rounded-full ${offline ? "bg-red-500" : "bg-brand"}`} aria-hidden />
-          {t("server")} {health ? `v${health.version}` : ""}
-        </span>
-        {health && (
-          <>
-            <span>{health.ffmpeg ? `ffmpeg ${health.ffmpeg}${health.hwaccel ? " • GPU" : ""}` : t("ffmpegMissing")}</span>
-            <span>{t("queue")} {health.queued} • {t("active")} {health.running}/{health.workers} {t("workers")}</span>
-            <span>{t("ttl", { n: health.ttl_min })}</span>
-          </>
-        )}
-      </footer>
+      <Footer i={i} health={health} offline={offline} />
     </div>
   );
 }

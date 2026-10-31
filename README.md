@@ -6,6 +6,8 @@ formatı seç, ilerlemeyi canlı izle, indir. Hesap yok, veritabanı yok, dış 
 - **Arka uç:** Rust (axum 0.8 + tokio). Görseller saf Rust (`image`, `webp`, `ravif`); video/ses
   sistemdeki `ffmpeg` alt süreç olarak (`-progress pipe:1` ile gerçek yüzde).
 - **Ön yüz:** Vite + React 19 + TypeScript + Tailwind v4; `rust-embed` ile **tek ikiliye gömülü**.
+  Yazı tipleri (Bricolage Grotesque, Atkinson Hyperlegible Next/Mono) pakete gömülü; Google Fonts'a
+  istek gitmez, CSP `default-src 'self'` bozulmaz.
 - **Dağıtım:** `cargo build --release` → tek dosya; ya da `docker compose up`.
 
 ## Hızlı başlangıç (macOS / Linux)
@@ -100,12 +102,21 @@ Debian/Ubuntu `libheif-dev clang pkg-config`). Docker imajında açık; macOS'ta
 ## Testler
 
 ```bash
-make test     # cargo test (26 test: katalog, ffmpeg argümanları, progress ayrıştırıcı,
-              # görsel dönüşüm, API uçtan uca; ffmpeg varsa 1 sn test videosu üretip
-              # mp3/gif/mp4/webm) + ön yüz tsc
+make test     # cargo test (27 test: katalog + her varsayılanın doğrulamadan geçmesi,
+              # ffmpeg argümanları, progress ayrıştırıcı, görsel dönüşüm, API uçtan uca;
+              # ffmpeg varsa 1 sn test videosu üretip mp3/gif/mp4/webm) + ön yüz tsc
 cargo test --features heic   # +1: HEIC→JPEG (tests/fixtures/sample-640x480.heic)
 make lint     # clippy -D warnings + fmt --check
 ```
+
+## Arayüz
+
+- Tema tokenları `web/src/index.css` içinde (açık/koyu, tüm metinler en az 4,5:1 kontrast).
+- Hedef açıklamaları, seçenek etiketleri ve Türkçe ekler (WebP'ye, JPEG'e) `web/src/meta.ts`'te;
+  katalog yine sunucudan gelir, bilinmeyen anahtar sunucunun etiketiyle gösterilir.
+- Türkçe sayı biçimi: `%90`, `3,1 MB`, `4032 × 3024` (`web/src/i18n.ts`).
+- Süresi bilinmeyen medyada (ör. tarayıcı kaydı WebM) ffmpeg yüzde veremez; arayüz belirsiz
+  çubuk ve geçen süre gösterir.
 
 ## Bilinen sınırlar
 

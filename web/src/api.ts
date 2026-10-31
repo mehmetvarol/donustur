@@ -183,22 +183,3 @@ export const api = {
     });
   },
 };
-
-export function fmtBytes(n: number): string {
-  if (!Number.isFinite(n)) return "–";
-  const u = ["B", "KB", "MB", "GB"];
-  let i = 0;
-  let v = n;
-  while (v >= 1024 && i < u.length - 1) {
-    v /= 1024;
-    i++;
-  }
-  return `${v < 10 && i > 0 ? v.toFixed(1) : Math.round(v)} ${u[i]}`;
-}
-
-export function fmtDuration(s: number | null): string {
-  if (s == null || !Number.isFinite(s)) return "";
-  const m = Math.floor(s / 60);
-  const r = Math.round(s - m * 60);
-  return m > 0 ? `${m}:${String(r).padStart(2, "0")}` : `${s.toFixed(1)} sn`;
-}

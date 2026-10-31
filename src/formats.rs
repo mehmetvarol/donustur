@@ -550,7 +550,7 @@ pub fn catalog() -> Vec<Target> {
                         "audio_bitrate",
                         "Ses bit hızı",
                         "kbps",
-                        &["96", "128", "192", "256", "320"],
+                        &["96", "128", "160", "192", "256", "320"],
                         "160",
                         true,
                     ),
@@ -581,7 +581,7 @@ pub fn catalog() -> Vec<Target> {
                         "audio_bitrate",
                         "Ses bit hızı",
                         "kbps",
-                        &["96", "128", "192", "256", "320"],
+                        &["96", "128", "160", "192", "256", "320"],
                         "160",
                         true,
                     ),
@@ -665,7 +665,7 @@ pub fn catalog() -> Vec<Target> {
                     "bitrate",
                     "Bit hızı",
                     "kbps",
-                    &["96", "128", "192", "256"],
+                    &["96", "128", "160", "192", "256"],
                     "160",
                     false,
                 )],
@@ -865,6 +865,26 @@ pub fn accepts(target: &Target, input: Kind) -> bool {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// Ön yüz varsayılanları olduğu gibi gönderir; her varsayılan kendi
+    /// doğrulamasından geçmeli (MKV/MOV/M4A'da "160" listede yoktu → 400).
+    #[test]
+    fn defaults_pass_validation() {
+        for t in catalog() {
+            let mut raw = serde_json::Map::new();
+            for o in &t.options {
+                let v = match &o.kind {
+                    OptKind::Int { default, .. } => json!(default),
+                    OptKind::Float { default, .. } => json!(default),
+                    OptKind::Enum { default, .. } => json!(default),
+                    OptKind::Bool { default } => json!(default),
+                    OptKind::Color { default } => json!(default),
+                };
+                raw.insert(o.key.to_string(), v);
+            }
+            validate(&t, Some(&raw)).unwrap_or_else(|e| panic!("{}: {e:?}", t.id));
+        }
+    }
 
     #[test]
     fn ids_unique_and_nonempty() {
