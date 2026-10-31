@@ -106,7 +106,10 @@ async fn health_and_formats() {
         .unwrap();
     let v = json(res).await;
     let arr = v.as_array().unwrap();
-    assert!(arr.iter().any(|t| t["id"] == "webp" && t["available"] == true));
+    assert!(
+        arr.iter()
+            .any(|t| t["id"] == "webp" && t["available"] == true)
+    );
     assert!(
         arr.iter()
             .all(|t| t["options"].is_array() && t["accepts"].is_array())
@@ -117,7 +120,10 @@ async fn health_and_formats() {
 async fn png_to_webp_end_to_end() {
     let (app, _d) = app(None).await;
     let (ct, body) = multipart(
-        &[("target", "webp"), ("options", r#"{"quality": 70, "width": 20}"#)],
+        &[
+            ("target", "webp"),
+            ("options", r#"{"quality": 70, "width": 20}"#),
+        ],
         Some(("Örnek Resim.png", "image/png", &png_bytes())),
     );
     let res = app
@@ -203,7 +209,11 @@ async fn rejects_bad_inputs() {
     // zip dosyası
     let (ct, body) = multipart(
         &[("target", "webp")],
-        Some(("a.zip", "application/zip", b"PK\x03\x04\0\0\0\0\0\0\0\0\0\0")),
+        Some((
+            "a.zip",
+            "application/zip",
+            b"PK\x03\x04\0\0\0\0\0\0\0\0\0\0",
+        )),
     );
     let res = app
         .clone()
@@ -347,7 +357,11 @@ async fn video_targets_if_ffmpeg_present() {
     for (target, opts, magic) in [
         ("mp3", r#"{"bitrate":"128"}"#, &b"ID3"[..]),
         ("gif_anim", r#"{"fps":5,"width":80}"#, &b"GIF8"[..]),
-        ("mp4", r#"{"crf":30,"preset":"ultrafast","resolution":"360"}"#, &[][..]),
+        (
+            "mp4",
+            r#"{"crf":30,"preset":"ultrafast","resolution":"360"}"#,
+            &[][..],
+        ),
         ("webm", r#"{"crf":40}"#, &[0x1A, 0x45, 0xDF, 0xA3][..]),
     ] {
         let (ct, body) = multipart(
@@ -385,4 +399,49 @@ async fn video_targets_if_ffmpeg_present() {
             assert_eq!(&bytes[..magic.len()], magic, "{target} sihirli bayt");
         }
     }
+}
+
+/// HEIC → JPEG (yalnız `heic` özelliğiyle; fixture heif-enc ile üretilmiş 640×480 testsrc).
+#[cfg(feature = "heic")]
+#[tokio::test]
+async fn heic_to_jpeg_end_to_end() {
+    let heic = include_bytes!("../../tests/fixtures/sample-640x480.heic");
+    let (app, _d) = app(None).await;
+    let (ct, body) = multipart(
+        &[("target", "jpeg"), ("options", r#"{"quality": 85}"#)],
+        Some(("Tatil Foto.heic", "image/heic", heic)),
+    );
+    let res = app
+        .clone()
+        .oneshot(
+            Request::post("/api/jobs")
+                .header(header::CONTENT_TYPE, ct)
+                .body(Body::from(body))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::ACCEPTED);
+    let id = json(res).await["id"].as_str().unwrap().to_string();
+
+    let v = wait_done(&app, &id).await;
+    assert_eq!(v["status"], "done", "{v}");
+    assert_eq!(v["input"]["mime"], "image/heif");
+    assert_eq!(v["input"]["width"], 640);
+    assert_eq!(v["input"]["height"], 480);
+    assert_eq!(v["output"]["name"], "Tatil_Foto.jpg");
+
+    let res = app
+        .oneshot(
+            Request::get(format!("/api/jobs/{id}/download"))
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(res.headers()[header::CONTENT_TYPE], "image/jpeg");
+    let bytes = res.into_body().collect().await.unwrap().to_bytes();
+    assert_eq!(&bytes[0..2], &[0xFF, 0xD8]);
+    let back = image::load_from_memory(&bytes).unwrap();
+    assert_eq!((back.width(), back.height()), (640, 480));
 }

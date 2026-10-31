@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1.7
-# 3 aşama: ön yüz (node) → ikili (rust) → çalışma (debian-slim + ffmpeg + libheif)
+# 3 aşama: ön yüz (node) → ikili (rust) → çalışma (debian trixie-slim + ffmpeg + libheif)
+# Not: bookworm libheif 1.15 taşır; libheif-rs en az 1.17 ister → trixie (1.19). Ubuntu 24.04: 1.17.
 
 # ---------- 1) ön yüz ----------
 FROM node:22-alpine AS web
@@ -10,7 +11,7 @@ COPY web/ ./
 RUN npm run build
 
 # ---------- 2) rust ----------
-FROM rust:1-bookworm AS build
+FROM rust:1-trixie AS build
 WORKDIR /src
 # libheif başlıkları: HEIC desteği (feature "heic")
 RUN apt-get update && apt-get install -y --no-install-recommends libheif-dev clang pkg-config nasm && rm -rf /var/lib/apt/lists/*
@@ -22,7 +23,7 @@ COPY --from=web /web/dist ./web/dist
 RUN cargo build --release --features heic && strip target/release/donustur
 
 # ---------- 3) çalışma ----------
-FROM debian:bookworm-slim AS runtime
+FROM debian:trixie-slim AS runtime
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ffmpeg libheif1 ca-certificates tini curl \
  && rm -rf /var/lib/apt/lists/* \

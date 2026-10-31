@@ -133,6 +133,7 @@ pub async fn image_dimensions(path: &Path) -> Option<(u32, u32)> {
             .ok()?
             .into_dimensions()
             .ok()
+            .or_else(|| crate::engine::image::heic_dimensions(&p))
     })
     .await
     .ok()

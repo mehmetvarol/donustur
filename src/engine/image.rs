@@ -52,9 +52,23 @@ fn decode_heic(path: &Path) -> AppResult<DynamicImage> {
         let row = &plane.data[y * stride..y * stride + (w as usize) * 4];
         buf.extend_from_slice(row);
     }
-    let rgba =
-        RgbaImage::from_raw(w, h, buf).ok_or_else(|| AppError::Conversion("HEIC tampon".into()))?;
+    let rgba = image::RgbaImage::from_raw(w, h, buf)
+        .ok_or_else(|| AppError::Conversion("HEIC tampon".into()))?;
     Ok(DynamicImage::ImageRgba8(rgba))
+}
+
+/// HEIC/HEIF boyutu (kodu çözmeden, yalnız `heic` özelliğiyle).
+#[cfg(feature = "heic")]
+pub fn heic_dimensions(path: &Path) -> Option<(u32, u32)> {
+    use libheif_rs::HeifContext;
+    let ctx = HeifContext::read_from_file(path.to_str()?).ok()?;
+    let handle = ctx.primary_image_handle().ok()?;
+    Some((handle.width(), handle.height()))
+}
+
+#[cfg(not(feature = "heic"))]
+pub fn heic_dimensions(_path: &Path) -> Option<(u32, u32)> {
+    None
 }
 
 #[cfg(not(feature = "heic"))]

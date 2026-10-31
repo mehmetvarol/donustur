@@ -37,11 +37,12 @@ jobs:
         with:
           components: clippy, rustfmt
       - uses: Swatinem/rust-cache@v2
-      - run: sudo apt-get update && sudo apt-get install -y ffmpeg nasm
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg nasm libheif-dev clang pkg-config
       - run: cargo fmt --check
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --all-targets --features heic -- -D warnings
       - run: cargo test
-      - run: cargo build --release
+      - run: cargo test --features heic
+      - run: cargo build --release --features heic
 
   docker:
     runs-on: ubuntu-latest

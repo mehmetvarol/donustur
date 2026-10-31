@@ -1,6 +1,6 @@
 [package]
 name = "donustur"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "Kendi sunucunda çalışan görsel/video/ses dönüştürücü (axum + ffmpeg + image)"
 license = "MIT"
@@ -34,7 +34,7 @@ rust-embed = { version = "8", features = ["include-exclude"] }
 image = { version = "0.25", features = ["avif"] }
 webp = "0.3"
 chrono = { version = "0.4", features = ["serde"] }
-libheif-rs = { version = "3", optional = true }
+libheif-rs = { version = "3", optional = true, default-features = false, features = ["v1_17"] }
 
 [dev-dependencies]
 tempfile = "3"

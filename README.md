@@ -28,8 +28,18 @@ Geliştirme: `make dev` (ikili, 8080) + ayrı pencerede `cd web && npm run dev` 
 docker compose up -d --build   # http://localhost:8080, veriler `donustur-data` volume'ünde
 ```
 
-İmaj: `debian:bookworm-slim` + ffmpeg + libheif; root olmayan kullanıcı; `HEALTHCHECK`
-`/api/health`. Docker imajı **HEIC desteğiyle** derlenir (`--features heic`).
+İmaj: `debian:trixie-slim` + ffmpeg + libheif; root olmayan kullanıcı; `HEALTHCHECK`
+`/api/health`. Docker imajı **HEIC desteğiyle** derlenir (`--features heic`). Taban trixie'dir
+çünkü bookworm'daki libheif 1.15, `libheif-rs`'in istediği ≥1.17'nin altında.
+
+macOS'ta Docker Desktop yerine [colima](https://github.com/abiosoft/colima) yeter:
+
+```bash
+brew install colima docker docker-compose
+mkdir -p ~/.docker/cli-plugins && ln -sfn /opt/homebrew/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/
+colima start --cpu 4 --memory 6 --vm-type vz
+docker compose up -d --build
+```
 
 ## Ortam değişkenleri
 
@@ -76,8 +86,8 @@ fps, kesme, hız (0,25–4×), sessiz. Ses: bit hızı, örnekleme, kanal, loudn
 Katalog **tek yerde** tanımlı: `src/formats.rs`; ön yüz `/api/formats`'tan okur.
 
 \* AVIF yalnız **yazılır** (ravif); okumak için dav1d gerekir, dahil değil.
-\*\* HEIC/HEIF okuma `--features heic` + sistem `libheif` ister (`brew install libheif`,
-Debian `libheif-dev`). Docker imajında açık; macOS'ta `make build-heic`.
+\*\* HEIC/HEIF okuma `--features heic` + sistem `libheif` ≥1.17 ister (`brew install libheif pkgconf`,
+Debian/Ubuntu `libheif-dev clang pkg-config`). Docker imajında açık; macOS'ta `make build-heic`.
 
 ## Güvenlik
 
@@ -93,6 +103,7 @@ Debian `libheif-dev`). Docker imajında açık; macOS'ta `make build-heic`.
 make test     # cargo test (26 test: katalog, ffmpeg argümanları, progress ayrıştırıcı,
               # görsel dönüşüm, API uçtan uca; ffmpeg varsa 1 sn test videosu üretip
               # mp3/gif/mp4/webm) + ön yüz tsc
+cargo test --features heic   # +1: HEIC→JPEG (tests/fixtures/sample-640x480.heic)
 make lint     # clippy -D warnings + fmt --check
 ```
 
@@ -125,6 +136,7 @@ src/
   assets.rs        rust-embed ile web/dist
 web/               Vite + React + TS + Tailwind
 deploy/            launchd plist (macOS açılışta başlat)
+tests/fixtures/    HEIC örnek dosyası
 ```
 
 Lisans: MIT.

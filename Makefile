@@ -12,10 +12,10 @@ web: ## ön yüzü derle (web/dist)
 build: web ## ön yüz + release ikili (target/release/donustur)
 	cargo build --release
 
-build-heic: web ## HEIC destekli release (brew install libheif gerekir)
+build-heic: web ## HEIC destekli release (brew install libheif pkgconf gerekir)
 	cargo build --release --features heic
 
-run: build ## release ikiliyi çalıştır
+run: build ## release ikiliyi çalıştır (HEIC için: make build-heic && ./target/release/donustur)
 	DONUSTUR_HWACCEL=auto ./target/release/donustur
 
 dev: ## geliştirme: cargo run (ön yüz web/dist'ten; ayrı pencerede `cd web && npm run dev` ile HMR)
